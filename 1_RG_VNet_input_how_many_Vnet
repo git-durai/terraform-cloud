@@ -1,0 +1,103 @@
+
+# Create RG, VNET | input no.of subnets
+############################################################################
+# File: 0_provider.tf
+
+
+terraform {
+/*
+  cloud {
+    organization = "TechLearn"
+
+    workspaces {
+      name = "WS_Dev"
+    }
+  }
+*/
+  required_providers {
+    azurerm = {
+      source = "hashicorp/azurerm"
+      version = "3.37.0"
+    }
+  }
+
+}
+
+
+provider "azurerm" {
+  # Configuration options
+    subscription_id = "e861d19f-5da1-4971-a086-5b3d04d69aa9"
+    tenant_id = "bbf68328-e172-4e1e-afec-49cd9ab7956c"
+    client_id = "1ea90d70-18be-4401-9efa-0ec8b8846d27"
+    client_secret = "Ltk8Q~LTZ5-EJjWZQ0SsKGlmQtQHxwQMvUNDub7A"
+    ### client_secret = var.client_secret
+    features {}
+}
+############################################################################
+
+# File: 1_Input_variables.tf
+
+
+
+variable "number_of_vnet" {
+  type=number
+  description="This defines the number of virtual network (Vnet) to be created."
+  default =2
+  validation {
+    condition = var.number_of_vnet < 5
+    error_message = "The number of vnet must be less than 5." ### Note: Sentance must finish wih a dot(.) to avoid syntax error.
+  }
+}
+
+############################################################################
+
+# File: 2_locals.tf
+
+
+locals {
+  rs_group_name="RG-dev"
+  location="North Europe"
+}
+############################################################################
+
+# File: 3_main.tf
+
+
+resource "azurerm_resource_group" "T_RG_01" {
+  name     = local.rs_group_name
+  location = local.location  
+}
+
+
+
+############################################################################
+
+# File: 4_Network.tf
+
+
+resource "azurerm_virtual_network" "T_appnetwork" {
+  count=var.number_of_vnet
+  name                = "vnet_${count.index+1}"
+  resource_group_name  = local.rs_group_name
+  location            = local.location
+  address_space       =  ["10.${count.index+1}.0.0/16"]
+  
+   depends_on = [
+     azurerm_resource_group.T_RG_01
+   ]
+  }
+
+
+############################################################################
+
+# File: terraform.tfvars
+
+# Runtime User Inputs 
+number_of_vnet = 3
+############################################################################
+
+/*
+Example Execution: 
+.\terraform plan -out main.tfplan -var="number_of_vnet=4"
+.\terraform apply main.tfplan
+*/
