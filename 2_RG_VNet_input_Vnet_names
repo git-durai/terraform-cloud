@@ -91,7 +91,7 @@ resource "azurerm_resource_group" "T_RG_01" {
 
 resource "azurerm_virtual_network" "T_appnetwork" {
   count=var.number_of_vnet
-  name                = local.vnet_name[count.index]
+  name                = var.vnet_name[count.index]
   resource_group_name  = local.rs_group_name
   location            = local.location
   address_space       =  ["10.${count.index+1}.0.0/16"]
